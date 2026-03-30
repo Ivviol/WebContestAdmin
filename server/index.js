@@ -600,21 +600,26 @@ app.post('/api/seed', async (_req, res) => {
 
 // ── Users ─────────────────────────────────────────────────────────────────────
 app.get('/api/users', async (_req, res) => {
-  const users = await User.find();
-  const result = await Promise.all(users.map(async (u) => {
-    const all      = await Ticket.find({ userId: u.id });
-    const nonVoided = all.filter((t) => t.status !== 'Voided');
-    const active   = all.filter((t) => t.status === 'Active');
-    const paid     = all.filter((t) => t.paymentMethod != null && t.status !== 'Voided');
-    const contestIds = [...new Set(active.map((t) => t.contestId))];
-    const contests = await Contest.find({ _id: { $in: paid.map((t) => t.contestId) } });
-    const revenue = paid.reduce((sum, t) => {
-      const c = contests.find((c) => c.id === t.contestId);
-      return sum + (c?.entryFee ?? 0);
-    }, 0);
-    return { ...doc(u), totalEntries: nonVoided.length, activeEntries: active.length, contestCount: contestIds.length, revenue };
-  }));
-  res.json(result);
+  try {
+    const users = await User.find();
+    const result = await Promise.all(users.map(async (u) => {
+      const all      = await Ticket.find({ userId: u.id });
+      const nonVoided = all.filter((t) => t.status !== 'Voided');
+      const active   = all.filter((t) => t.status === 'Active');
+      const paid     = all.filter((t) => t.paymentMethod != null && t.status !== 'Voided');
+      const contestIds = [...new Set(active.map((t) => t.contestId))];
+      const contests = await Contest.find({ _id: { $in: paid.map((t) => t.contestId) } });
+      const revenue = paid.reduce((sum, t) => {
+        const c = contests.find((c) => c.id === t.contestId);
+        return sum + (c?.entryFee ?? 0);
+      }, 0);
+      return { ...doc(u), totalEntries: nonVoided.length, activeEntries: active.length, contestCount: contestIds.length, revenue };
+    }));
+    res.json(result);
+  } catch (err) {
+    console.error('GET /api/users error:', err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.post('/api/users', async (req, res) => {
