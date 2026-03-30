@@ -40,8 +40,9 @@ const sections = [
       { id: 'docs',     icon: 'description',   label: 'Documents' },
       { id: 'audit',    icon: 'receipt_long',  label: 'Audit Log' },
       { id: 'settings', icon: 'settings',      label: 'Settings' },
-      { id: 'user',      icon: 'account_circle', label: 'User Login' },
-      { id: 'dashboard', icon: 'dashboard',       label: 'My Picks' },
+      { id: 'user',        icon: 'account_circle', label: 'User Login' },
+      { id: 'dashboard',   icon: 'dashboard',      label: 'My Picks' },
+      { id: 'myleaderboard', icon: 'leaderboard',  label: 'My Leaderboard' },
     ],
   },
 ];
@@ -76,10 +77,10 @@ export default function NavigationList({ expanded }) {
                 selected={activePage === item.id}
                 onClick={() => onNavigate?.(item.id)}
               >
-                <ListItemIcon>
+                <ListItemIcon sx={{ minWidth: expanded ? undefined : 0 }}>
                   <Icon>{item.icon}</Icon>
                 </ListItemIcon>
-                <ListItemText primary={item.label} />
+                {expanded && <ListItemText primary={item.label} />}
               </ListItemButton>
             </ListItem>
           ))}

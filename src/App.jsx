@@ -23,6 +23,7 @@ import DocumentsPage from './components/DocumentsPage.jsx';
 import SettingsPage from './components/SettingsPage.jsx';
 import UserSelectorPage from './components/UserSelectorPage.jsx';
 import DashboardPage from './components/DashboardPage.jsx';
+import MyLeaderboardPage from './components/MyLeaderboardPage.jsx';
 import DevDateBar from './components/DevDateBar.jsx';
 
 const theme = createTheme(getMUIThemeOptions());
@@ -41,12 +42,13 @@ const PAGES = {
   audit:       <AuditLogPage />,
   docs:        <DocumentsPage />,
   settings:    <SettingsPage />,
-  user:        <UserSelectorPage />,
-  dashboard:   <DashboardPage />,
+  user:          <UserSelectorPage />,
+  dashboard:     <DashboardPage />,
+  myleaderboard: <MyLeaderboardPage />,
 };
 
 // Pages that take over the full screen on mobile (no shell/sidebar)
-const FULLSCREEN_MOBILE_PAGES = new Set(['user', 'dashboard']);
+const FULLSCREEN_MOBILE_PAGES = new Set(['user', 'dashboard', 'myleaderboard']);
 
 function AppContent() {
   const isMobile = useMediaQuery('(max-width:600px)');
