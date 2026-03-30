@@ -303,7 +303,7 @@ export default function WeeklyLinesPage() {
       setCard(data);
       if (data.leagueId) {
         const teams = await fetch(`/api/leagues/${data.leagueId}/teams`).then((r) => r.json());
-        setCardTeams(teams);
+        setCardTeams(teams.map((t) => t.name));
       } else {
         setCardTeams([]);
       }

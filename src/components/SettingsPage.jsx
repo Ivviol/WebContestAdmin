@@ -16,10 +16,12 @@ import IconButton from '@mui/material/IconButton';
 import Paper from '@mui/material/Paper';
 import CircularProgress from '@mui/material/CircularProgress';
 import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
 import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
 import Tooltip from '@mui/material/Tooltip';
+import Avatar from '@mui/material/Avatar';
 import SaveIcon from '@mui/icons-material/Save';
 import RestoreIcon from '@mui/icons-material/Restore';
 import AddIcon from '@mui/icons-material/Add';
@@ -154,16 +156,28 @@ function ContestTypeCard({ typeKey, original, onSaved }) {
 }
 
 // ── League teams editor (right panel) ─────────────────────────────────────────
-function LeagueTeamsEditor({ league, onTeamCountChange }) {
-  const [teams, setTeams]     = useState([]);
-  const [original, setOriginal] = useState([]);
-  const [newName, setNewName] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving]   = useState(false);
-  const [saved, setSaved]     = useState(false);
-  const [error, setError]     = useState('');
+function TeamAvatar({ abbr }) {
+  return (
+    <Avatar sx={{ width: 28, height: 28, fontSize: 10, fontWeight: 700, bgcolor: 'primary.main', flexShrink: 0 }}>
+      {abbr || '?'}
+    </Avatar>
+  );
+}
 
-  const isDirty = JSON.stringify([...teams].sort()) !== JSON.stringify([...original].sort());
+function LeagueTeamsEditor({ league, onTeamCountChange }) {
+  const [teams, setTeams]       = useState([]);
+  const [original, setOriginal] = useState([]);
+  const [newName, setNewName]   = useState('');
+  const [newAbbr, setNewAbbr]   = useState('');
+  const [editingIdx, setEditingIdx] = useState(null);
+  const [editName, setEditName] = useState('');
+  const [editAbbr, setEditAbbr] = useState('');
+  const [loading, setLoading]   = useState(true);
+  const [saving, setSaving]     = useState(false);
+  const [saved, setSaved]       = useState(false);
+  const [error, setError]       = useState('');
+
+  const isDirty = JSON.stringify(teams) !== JSON.stringify(original);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -180,16 +194,39 @@ function LeagueTeamsEditor({ league, onTeamCountChange }) {
 
   function addTeam() {
     const name = newName.trim();
-    if (!name || teams.includes(name)) return;
-    setTeams((prev) => [...prev, name].sort());
+    const abbr = newAbbr.trim().toUpperCase();
+    if (!name || teams.some((t) => t.name === name)) return;
+    setTeams((prev) => [...prev, { name, abbr }].sort((a, b) => a.name.localeCompare(b.name)));
     setNewName('');
+    setNewAbbr('');
   }
 
-  function removeTeam(team) {
-    setTeams((prev) => prev.filter((t) => t !== team));
+  function removeTeam(idx) {
+    setTeams((prev) => prev.filter((_, i) => i !== idx));
+    if (editingIdx === idx) setEditingIdx(null);
   }
 
-  function reset() { setTeams([...original]); setNewName(''); setSaved(false); setError(''); }
+  function startEdit(idx) {
+    setEditingIdx(idx);
+    setEditName(teams[idx].name);
+    setEditAbbr(teams[idx].abbr);
+  }
+
+  function cancelEdit() { setEditingIdx(null); }
+
+  function saveEdit(idx) {
+    const name = editName.trim();
+    const abbr = editAbbr.trim().toUpperCase();
+    if (!name) return;
+    setTeams((prev) => {
+      const next = [...prev];
+      next[idx] = { name, abbr };
+      return next.sort((a, b) => a.name.localeCompare(b.name));
+    });
+    setEditingIdx(null);
+  }
+
+  function reset() { setTeams([...original]); setNewName(''); setNewAbbr(''); setEditingIdx(null); setSaved(false); setError(''); }
 
   async function save() {
     setSaving(true); setError('');
@@ -236,38 +273,85 @@ function LeagueTeamsEditor({ league, onTeamCountChange }) {
       {error && <Alert severity="error" sx={{ mb: 1.5 }}>{error}</Alert>}
       {saved  && <Alert severity="success" sx={{ mb: 1.5 }}>Team list saved.</Alert>}
 
+      {/* Add new team */}
       <Stack direction="row" spacing={1} mb={2}>
         <TextField
-          size="small" placeholder="Add team name…" sx={{ flexGrow: 1 }}
+          size="small" label="Abbr" sx={{ width: 80 }}
+          value={newAbbr}
+          onChange={(e) => setNewAbbr(e.target.value.slice(0, 4))}
+          onKeyDown={(e) => { if (e.key === 'Enter') addTeam(); }}
+          inputProps={{ style: { textTransform: 'uppercase' } }}
+        />
+        <TextField
+          size="small" placeholder="Team name…" sx={{ flexGrow: 1 }}
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') addTeam(); }}
         />
         <Button variant="outlined" size="small" startIcon={<AddIcon />}
-          disabled={!newName.trim() || teams.includes(newName.trim())}
+          disabled={!newName.trim() || teams.some((t) => t.name === newName.trim())}
           onClick={addTeam}>
           Add
         </Button>
       </Stack>
 
-      <Paper variant="outlined" sx={{ p: 1.5, maxHeight: 320, overflowY: 'auto' }}>
+      <Paper variant="outlined" sx={{ maxHeight: 380, overflowY: 'auto' }}>
         {teams.length === 0 ? (
           <Typography variant="body2" color="text.disabled" sx={{ textAlign: 'center', py: 2 }}>
             No teams yet
           </Typography>
         ) : (
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
-            {teams.map((team) => (
-              <Chip
-                key={team}
-                label={team}
-                size="small"
-                variant="outlined"
-                onDelete={() => removeTeam(team)}
-                deleteIcon={<DeleteOutlineIcon />}
-              />
+          <List dense disablePadding>
+            {teams.map((team, idx) => (
+              <ListItem key={`${team.name}-${idx}`} disablePadding divider
+                secondaryAction={
+                  editingIdx === idx ? (
+                    <Stack direction="row" spacing={0.5}>
+                      <IconButton size="small" color="primary" onClick={() => saveEdit(idx)}><CheckIcon fontSize="small" /></IconButton>
+                      <IconButton size="small" onClick={cancelEdit}><CloseIcon fontSize="small" /></IconButton>
+                    </Stack>
+                  ) : (
+                    <Stack direction="row" spacing={0.5}>
+                      <Tooltip title="Edit"><IconButton size="small" onClick={() => startEdit(idx)}><EditIcon fontSize="small" /></IconButton></Tooltip>
+                      <Tooltip title="Remove"><IconButton size="small" color="error" onClick={() => removeTeam(idx)}><DeleteOutlineIcon fontSize="small" /></IconButton></Tooltip>
+                    </Stack>
+                  )
+                }
+              >
+                <ListItemButton disableRipple sx={{ pr: 10, py: 0.5 }}>
+                  {editingIdx === idx ? (
+                    <Stack direction="row" spacing={1} alignItems="center" sx={{ width: '100%' }}>
+                      <TeamAvatar abbr={editAbbr || team.abbr} />
+                      <TextField
+                        size="small" label="Abbr" sx={{ width: 80 }}
+                        value={editAbbr}
+                        onChange={(e) => setEditAbbr(e.target.value.slice(0, 4))}
+                        onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(idx); if (e.key === 'Escape') cancelEdit(); }}
+                        inputProps={{ style: { textTransform: 'uppercase' } }}
+                        autoFocus
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <TextField
+                        size="small" label="Name" sx={{ flexGrow: 1 }}
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(idx); if (e.key === 'Escape') cancelEdit(); }}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </Stack>
+                  ) : (
+                    <Stack direction="row" spacing={1.5} alignItems="center">
+                      <TeamAvatar abbr={team.abbr} />
+                      <ListItemText
+                        primary={team.name}
+                        primaryTypographyProps={{ variant: 'body2' }}
+                      />
+                    </Stack>
+                  )}
+                </ListItemButton>
+              </ListItem>
             ))}
-          </Box>
+          </List>
         )}
       </Paper>
     </Box>

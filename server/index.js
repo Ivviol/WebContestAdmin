@@ -86,17 +86,19 @@ app.delete('/api/leagues/:id', async (req, res) => {
 app.get('/api/leagues/:id/teams', async (req, res) => {
   const league = await League.findById(req.params.id);
   if (!league) return res.status(404).json({ error: 'League not found' });
-  res.json([...league.teams].sort());
+  res.json([...league.teams].sort((a, b) => a.name.localeCompare(b.name)));
 });
 
 app.put('/api/leagues/:id/teams', async (req, res) => {
   const league = await League.findById(req.params.id);
   if (!league) return res.status(404).json({ error: 'League not found' });
   if (!Array.isArray(req.body.teams)) return res.status(400).json({ error: 'teams must be an array' });
-  league.teams = req.body.teams.map((t) => t.trim()).filter(Boolean);
+  league.teams = req.body.teams
+    .filter((t) => t?.name?.trim())
+    .map((t) => ({ name: t.name.trim(), abbr: (t.abbr || '').trim().toUpperCase() }));
   await league.save();
   await audit('settings_changed', league.id, `${league.name} team list updated (${league.teams.length} teams)`);
-  res.json([...league.teams].sort());
+  res.json([...league.teams].sort((a, b) => a.name.localeCompare(b.name)));
 });
 
 // ── Contests ──────────────────────────────────────────────────────────────────

@@ -45,22 +45,48 @@ await Settings.create({
 });
 console.log('  Settings: seeded');
 
-// ── League ────────────────────────────────────────────────────────────────────
-await seedIfEmpty(League, 'League', [
+// ── League ── force-replace to migrate teams from [String] to [{ name, abbr }]
+await League.deleteMany({});
+await League.insertMany([
   {
     _id: 'nfl', name: 'NFL',
     teams: [
-      'Arizona Cardinals','Atlanta Falcons','Baltimore Ravens','Buffalo Bills',
-      'Carolina Panthers','Chicago Bears','Cincinnati Bengals','Cleveland Browns',
-      'Dallas Cowboys','Denver Broncos','Detroit Lions','Green Bay Packers',
-      'Houston Texans','Indianapolis Colts','Jacksonville Jaguars','Kansas City Chiefs',
-      'Las Vegas Raiders','Los Angeles Chargers','Los Angeles Rams','Miami Dolphins',
-      'Minnesota Vikings','New England Patriots','New Orleans Saints','New York Giants',
-      'New York Jets','Philadelphia Eagles','Pittsburgh Steelers','San Francisco 49ers',
-      'Seattle Seahawks','Tampa Bay Buccaneers','Tennessee Titans','Washington Commanders',
+      { name: 'Arizona Cardinals',    abbr: 'ARI' },
+      { name: 'Atlanta Falcons',      abbr: 'ATL' },
+      { name: 'Baltimore Ravens',     abbr: 'BAL' },
+      { name: 'Buffalo Bills',        abbr: 'BUF' },
+      { name: 'Carolina Panthers',    abbr: 'CAR' },
+      { name: 'Chicago Bears',        abbr: 'CHI' },
+      { name: 'Cincinnati Bengals',   abbr: 'CIN' },
+      { name: 'Cleveland Browns',     abbr: 'CLE' },
+      { name: 'Dallas Cowboys',       abbr: 'DAL' },
+      { name: 'Denver Broncos',       abbr: 'DEN' },
+      { name: 'Detroit Lions',        abbr: 'DET' },
+      { name: 'Green Bay Packers',    abbr: 'GB'  },
+      { name: 'Houston Texans',       abbr: 'HOU' },
+      { name: 'Indianapolis Colts',   abbr: 'IND' },
+      { name: 'Jacksonville Jaguars', abbr: 'JAX' },
+      { name: 'Kansas City Chiefs',   abbr: 'KC'  },
+      { name: 'Las Vegas Raiders',    abbr: 'LV'  },
+      { name: 'Los Angeles Chargers', abbr: 'LAC' },
+      { name: 'Los Angeles Rams',     abbr: 'LAR' },
+      { name: 'Miami Dolphins',       abbr: 'MIA' },
+      { name: 'Minnesota Vikings',    abbr: 'MIN' },
+      { name: 'New England Patriots', abbr: 'NE'  },
+      { name: 'New Orleans Saints',   abbr: 'NO'  },
+      { name: 'New York Giants',      abbr: 'NYG' },
+      { name: 'New York Jets',        abbr: 'NYJ' },
+      { name: 'Philadelphia Eagles',  abbr: 'PHI' },
+      { name: 'Pittsburgh Steelers',  abbr: 'PIT' },
+      { name: 'San Francisco 49ers',  abbr: 'SF'  },
+      { name: 'Seattle Seahawks',     abbr: 'SEA' },
+      { name: 'Tampa Bay Buccaneers', abbr: 'TB'  },
+      { name: 'Tennessee Titans',     abbr: 'TEN' },
+      { name: 'Washington Commanders',abbr: 'WSH' },
     ],
   },
 ]);
+console.log('  League: seeded (teams migrated to { name, abbr })');
 
 // ── Users (20) ────────────────────────────────────────────────────────────────
 await seedIfEmpty(User, 'User', [

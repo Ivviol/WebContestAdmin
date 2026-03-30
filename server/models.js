@@ -132,7 +132,7 @@ export const WeeklyPick = mongoose.model('WeeklyPick', new Schema({
 export const League = mongoose.model('League', new Schema({
   _id:   String,
   name:  String,
-  teams: [String],
+  teams: [{ name: String, abbr: String, _id: false }],
 }, jsonOpts));
 
 // ── Proxy ─────────────────────────────────────────────────────────────────────
