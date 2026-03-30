@@ -577,6 +577,27 @@ app.patch('/api/contests/:id/payouts-status', async (req, res) => {
   res.json({ payoutsStatus: status });
 });
 
+// ── Health / Seed ─────────────────────────────────────────────────────────────
+app.get('/api/health', async (_req, res) => {
+  const [users, contests, tickets, leagues, proxies, auditLogs, weeklyCards, weeklyPicks] =
+    await Promise.all([
+      User.countDocuments(), Contest.countDocuments(), Ticket.countDocuments(),
+      League.countDocuments(), Proxy.countDocuments(), AuditLog.countDocuments(),
+      WeeklyCard.countDocuments(), WeeklyPick.countDocuments(),
+    ]);
+  res.json({ status: 'ok', counts: { users, contests, tickets, leagues, proxies, auditLogs, weeklyCards, weeklyPicks } });
+});
+
+app.post('/api/seed', async (_req, res) => {
+  const { execFile } = await import('child_process');
+  const { fileURLToPath } = await import('url');
+  const seedPath = path.join(path.dirname(fileURLToPath(import.meta.url)), 'seed.js');
+  execFile(process.execPath, [seedPath], { env: process.env }, (err, stdout, stderr) => {
+    if (err) return res.status(500).json({ error: err.message, stderr });
+    res.json({ ok: true, output: stdout });
+  });
+});
+
 // ── Users ─────────────────────────────────────────────────────────────────────
 app.get('/api/users', async (_req, res) => {
   const users = await User.find();
