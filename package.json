@@ -1,0 +1,35 @@
+{
+  "name": "spark-admin-mongo",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k \"vite --port 5176\" \"node --watch server/index.js\"",
+    "seed": "node server/seed.js",
+    "server": "node server/index.js",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "node server/index.js"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.13.5",
+    "@emotion/styled": "^11.13.5",
+    "@fontsource/material-icons": "^5.0.8",
+    "@fontsource/roboto": "^5.1.0",
+    "@kambi/spark-design-tokens": "file:vendor/kambi-spark-design-tokens-3.4.0.tgz",
+    "@kambi/spark-helpers": "file:vendor/kambi-spark-helpers-3.2.0.tgz",
+    "@mui/icons-material": "^7.1.0",
+    "@mui/material": "^7.1.0",
+    "@mui/x-data-grid": "^7.28.3",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "mongoose": "^8.13.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.2.1",
+    "vite": "^6.3.5"
+  }
+}
